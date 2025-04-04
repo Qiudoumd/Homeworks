@@ -8,3 +8,4 @@ VertexPosHTex VS(VertexPosTex vIn)
     vOut.tex = vIn.tex;
     return vOut;
 }
+

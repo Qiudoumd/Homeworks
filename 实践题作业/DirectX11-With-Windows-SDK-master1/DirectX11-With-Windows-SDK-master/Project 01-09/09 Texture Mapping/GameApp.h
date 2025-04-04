@@ -14,6 +14,7 @@ public:
         DirectX::XMMATRIX view;
         DirectX::XMMATRIX proj;
         DirectX::XMMATRIX worldInvTranspose;
+        DirectX::XMMATRIX rotation; // 添加旋转矩阵
     };
 
     struct PSConstantBuffer
@@ -29,7 +30,7 @@ public:
         DirectX::XMFLOAT4 eyePos;
     };
 
-    enum class ShowMode { WoodCrate, FireAnim };
+    enum class ShowMode { WoodCrate, FireAnim,Cone,Sphere,Cylinder };
 
 public:
     GameApp(HINSTANCE hInstance, const std::wstring& windowName, int initWidth, int initHeight);
@@ -62,6 +63,9 @@ private:
     ComPtr<ID3D11ShaderResourceView> m_pWoodCrate;			    // 木盒纹理
     std::vector<ComPtr<ID3D11ShaderResourceView>> m_pFireAnims; // 火焰纹理集
     ComPtr<ID3D11SamplerState> m_pSamplerState;				    // 采样器状态
+    ComPtr<ID3D11ShaderResourceView> m_pConeCrate;			    // 圆锥纹理
+    ComPtr<ID3D11ShaderResourceView> m_pSphereCrate;			// 球体纹理
+    ComPtr<ID3D11ShaderResourceView> m_pCylinderCrate;			// 圆柱体纹理
 
     ComPtr<ID3D11VertexShader> m_pVertexShader3D;				// 用于3D的顶点着色器
     ComPtr<ID3D11PixelShader> m_pPixelShader3D;				    // 用于3D的像素着色器

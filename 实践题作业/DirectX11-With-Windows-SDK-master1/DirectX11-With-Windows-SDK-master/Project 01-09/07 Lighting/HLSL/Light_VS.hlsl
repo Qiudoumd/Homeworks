@@ -5,7 +5,7 @@ VertexOut VS(VertexIn vIn)
 {
     VertexOut vOut;
     matrix viewProj = mul(g_View, g_Proj);
-    float4 posW = mul(float4(vIn.posL, 1.0f), g_World);
+    float4 posW = mul(float4(vIn.posL, 1.0f), g_World);//世界空间
 
     vOut.posH = mul(posW, viewProj);
     vOut.posW = posW.xyz;

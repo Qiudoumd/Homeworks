@@ -11,5 +11,9 @@ VertexPosHWNormalTex VS(VertexPosNormalTex vIn)
     vOut.posW = posW.xyz;
     vOut.normalW = mul(vIn.normalL, (float3x3) g_WorldInvTranspose);
     vOut.tex = vIn.tex;
+    
+    float4 rotatedTex = mul(float4(vIn.tex, 0.0f, 1.0f), rotation);
+    vOut.tex = rotatedTex.xy;
+
     return vOut;
 }

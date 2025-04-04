@@ -6,6 +6,8 @@ cbuffer VSConstantBuffer : register(b0)
     matrix g_View;  
     matrix g_Proj;  
     matrix g_WorldInvTranspose;
+    float3 lightPosition;
+    float3 cameraPosition;
 }
 
 cbuffer PSConstantBuffer : register(b1)

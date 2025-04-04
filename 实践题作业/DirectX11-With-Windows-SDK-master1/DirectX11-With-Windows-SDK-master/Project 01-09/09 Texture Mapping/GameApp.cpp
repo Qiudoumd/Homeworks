@@ -45,7 +45,11 @@ void GameApp::UpdateScene(float dt)
         static int curr_mode_item = static_cast<int>(m_CurrMode);
         const char* mode_strs[] = {
             "Box",
-            "Fire Anim"
+            "Fire Anim",
+            "Cone",
+            "Sphere",
+            "Cylinder"
+
         };
         if (ImGui::Combo("Mode", &curr_mode_item, mode_strs, ARRAYSIZE(mode_strs)))
         {
@@ -60,7 +64,7 @@ void GameApp::UpdateScene(float dt)
                 m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
                 m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pWoodCrate.GetAddressOf());
             }
-            else
+            else if(curr_mode_item == 1)
             {
                 m_CurrMode = ShowMode::FireAnim;
                 m_CurrFrame = 0;
@@ -70,6 +74,36 @@ void GameApp::UpdateScene(float dt)
                 m_pd3dImmediateContext->VSSetShader(m_pVertexShader2D.Get(), nullptr, 0);
                 m_pd3dImmediateContext->PSSetShader(m_pPixelShader2D.Get(), nullptr, 0);
                 m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pFireAnims[0].GetAddressOf());
+            }
+            else if(curr_mode_item == 2)
+            {
+                m_CurrMode = ShowMode::Cone;
+                m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout3D.Get());
+                auto meshData = Geometry::CreateCone();  // 调用创建圆锥的函数
+                ResetMesh(meshData);
+                m_pd3dImmediateContext->VSSetShader(m_pVertexShader3D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pConeCrate.GetAddressOf());  // 可以使用相同的纹理
+            }
+            else if (curr_mode_item == 3)
+            {
+                m_CurrMode = ShowMode::Sphere;
+                m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout3D.Get());
+                auto meshData = Geometry::CreateSphere();  // 调用创建球体的函数
+                ResetMesh(meshData);
+                m_pd3dImmediateContext->VSSetShader(m_pVertexShader3D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pSphereCrate.GetAddressOf()); 
+            }
+            else if (curr_mode_item == 4)
+            {
+                m_CurrMode = ShowMode::Cylinder;
+                m_pd3dImmediateContext->IASetInputLayout(m_pVertexLayout3D.Get());
+                auto meshData = Geometry::CreateCylinder();  // 调用创建圆柱体的函数
+                ResetMesh(meshData);
+                m_pd3dImmediateContext->VSSetShader(m_pVertexShader3D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
+                m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pCylinderCrate.GetAddressOf()); 
             }
         }
     }
@@ -83,6 +117,11 @@ void GameApp::UpdateScene(float dt)
         XMMATRIX W = XMMatrixRotationX(phi) * XMMatrixRotationY(theta);
         m_VSConstantBuffer.world = XMMatrixTranspose(W);
         m_VSConstantBuffer.worldInvTranspose = XMMatrixTranspose(InverseTranspose(W));
+
+        // 更新旋转矩阵
+        static float rotationAngle = 0.0f;
+        rotationAngle += dt; // 根据时间更新旋转角度
+        m_VSConstantBuffer.rotation = DirectX::XMMatrixRotationZ(rotationAngle); // 绕Z轴旋转
 
         // 更新常量缓冲区，让立方体转起来
         D3D11_MAPPED_SUBRESOURCE mappedData;
@@ -102,6 +141,63 @@ void GameApp::UpdateScene(float dt)
             m_CurrFrame = (m_CurrFrame + 1) % 120;
             m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pFireAnims[m_CurrFrame].GetAddressOf());
         }		
+    }
+    else if (m_CurrMode == ShowMode::Cone)
+    {
+        static float phi = 0.0f, theta = 0.0f;
+        phi += 0.0001f, theta += 0.00015f;
+        XMMATRIX W = XMMatrixRotationX(phi) * XMMatrixRotationY(theta);
+        m_VSConstantBuffer.world = XMMatrixTranspose(W);
+        m_VSConstantBuffer.worldInvTranspose = XMMatrixTranspose(InverseTranspose(W));
+
+        // 更新旋转矩阵
+        static float rotationAngle = 0.0f;
+        rotationAngle += dt; // 根据时间更新旋转角度
+        m_VSConstantBuffer.rotation = DirectX::XMMatrixRotationZ(rotationAngle); // 绕Z轴旋转
+
+        // 更新常量缓冲区，让圆锥转起来
+        D3D11_MAPPED_SUBRESOURCE mappedData;
+        HR(m_pd3dImmediateContext->Map(m_pConstantBuffers[0].Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+        memcpy_s(mappedData.pData, sizeof(VSConstantBuffer), &m_VSConstantBuffer, sizeof(VSConstantBuffer));
+        m_pd3dImmediateContext->Unmap(m_pConstantBuffers[0].Get(), 0);
+    }
+    else if (m_CurrMode == ShowMode::Sphere)
+    {
+        static float phi = 0.0f, theta = 0.0f;
+        phi += 0.0001f, theta += 0.00015f;
+        XMMATRIX W = XMMatrixRotationX(phi) * XMMatrixRotationY(theta);
+        m_VSConstantBuffer.world = XMMatrixTranspose(W);
+        m_VSConstantBuffer.worldInvTranspose = XMMatrixTranspose(InverseTranspose(W));
+
+        // 更新旋转矩阵
+        static float rotationAngle = 0.0f;
+        rotationAngle += dt; // 根据时间更新旋转角度
+        m_VSConstantBuffer.rotation = DirectX::XMMatrixRotationZ(rotationAngle); // 绕Z轴旋转
+
+        // 更新常量缓冲区，让圆锥转起来
+        D3D11_MAPPED_SUBRESOURCE mappedData;
+        HR(m_pd3dImmediateContext->Map(m_pConstantBuffers[0].Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+        memcpy_s(mappedData.pData, sizeof(VSConstantBuffer), &m_VSConstantBuffer, sizeof(VSConstantBuffer));
+        m_pd3dImmediateContext->Unmap(m_pConstantBuffers[0].Get(), 0);
+    }
+    else if (m_CurrMode == ShowMode::Cylinder)
+    {
+        static float phi = 0.0f, theta = 0.0f;
+        phi += 0.0001f, theta += 0.00015f;
+        XMMATRIX W = XMMatrixRotationX(phi) * XMMatrixRotationY(theta);
+        m_VSConstantBuffer.world = XMMatrixTranspose(W);
+        m_VSConstantBuffer.worldInvTranspose = XMMatrixTranspose(InverseTranspose(W));
+
+        // 更新旋转矩阵
+        static float rotationAngle = 0.0f;
+        rotationAngle += dt; // 根据时间更新旋转角度
+        m_VSConstantBuffer.rotation = DirectX::XMMatrixRotationZ(rotationAngle); // 绕Z轴旋转
+
+        // 更新常量缓冲区，让圆锥转起来
+        D3D11_MAPPED_SUBRESOURCE mappedData;
+        HR(m_pd3dImmediateContext->Map(m_pConstantBuffers[0].Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedData));
+        memcpy_s(mappedData.pData, sizeof(VSConstantBuffer), &m_VSConstantBuffer, sizeof(VSConstantBuffer));
+        m_pd3dImmediateContext->Unmap(m_pConstantBuffers[0].Get(), 0);
     }
 }
 
@@ -177,6 +273,12 @@ bool GameApp::InitResource()
 
     // 初始化木箱纹理
     HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"..\\Texture\\WoodCrate.dds", nullptr, m_pWoodCrate.GetAddressOf()));
+    //初始化圆锥纹理
+    HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"..\\Texture\\flarealpha.dds", nullptr, m_pConeCrate.GetAddressOf()));
+    //初始化球体纹理
+    HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"..\\Texture\\flarealpha.dds", nullptr, m_pSphereCrate.GetAddressOf()));
+    //初始化圆柱体纹理
+    HR(CreateDDSTextureFromFile(m_pd3dDevice.Get(), L"..\\Texture\\flarealpha.dds", nullptr, m_pCylinderCrate.GetAddressOf()));
     // 初始化火焰纹理
     WCHAR strFile[40];
     m_pFireAnims.resize(120);
@@ -210,6 +312,10 @@ bool GameApp::InitResource()
         XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f),
         XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f)
     ));
+    m_VSConstantBuffer.proj = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveFovLH(DirectX::XM_PIDIV2, AspectRatio(), 1.0f, 1000.0f));
+    m_VSConstantBuffer.worldInvTranspose = DirectX::XMMatrixIdentity();
+    m_VSConstantBuffer.rotation = DirectX::XMMatrixIdentity(); // 初始化旋转矩阵为单位矩阵
+
     m_VSConstantBuffer.proj = XMMatrixTranspose(XMMatrixPerspectiveFovLH(XM_PIDIV2, AspectRatio(), 1.0f, 1000.0f));
     m_VSConstantBuffer.worldInvTranspose = XMMatrixIdentity();
     
@@ -220,7 +326,7 @@ bool GameApp::InitResource()
     m_PSConstantBuffer.pointLight[0].diffuse = XMFLOAT4(0.7f, 0.7f, 0.7f, 1.0f);
     m_PSConstantBuffer.pointLight[0].specular = XMFLOAT4(0.5f, 0.5f, 0.5f, 1.0f);
     m_PSConstantBuffer.pointLight[0].att = XMFLOAT3(0.0f, 0.1f, 0.0f);
-    m_PSConstantBuffer.pointLight[0].range = 25.0f;
+    m_PSConstantBuffer.pointLight[0].range = 25.0f; 
     m_PSConstantBuffer.numDirLight = 0;
     m_PSConstantBuffer.numPointLight = 1;
     m_PSConstantBuffer.numSpotLight = 0;
@@ -252,7 +358,6 @@ bool GameApp::InitResource()
     m_pd3dImmediateContext->PSSetSamplers(0, 1, m_pSamplerState.GetAddressOf());
     m_pd3dImmediateContext->PSSetShaderResources(0, 1, m_pWoodCrate.GetAddressOf());
     m_pd3dImmediateContext->PSSetShader(m_pPixelShader3D.Get(), nullptr, 0);
-    
     // ******************
     // 设置调试对象名
     //

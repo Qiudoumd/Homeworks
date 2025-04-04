@@ -10,6 +10,7 @@ cbuffer VSConstantBuffer : register(b0)
     matrix g_View;  
     matrix g_Proj;  
     matrix g_WorldInvTranspose;
+    matrix rotation; // 添加旋转矩阵
 }
 
 cbuffer PSConstantBuffer : register(b1)
