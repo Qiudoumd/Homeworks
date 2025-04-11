@@ -37,7 +37,9 @@ private:
 
     std::unique_ptr<Depth2D> m_pDepthTexture;                   // 深度缓冲区
 
+
     GameObject m_Sphere;										// 球
+    GameObject m_NewSphere;										// 新球
     GameObject m_Cube;										    // 立方体
     GameObject m_Cylinder;									    // 圆柱体
     GameObject m_House;										    // 房屋

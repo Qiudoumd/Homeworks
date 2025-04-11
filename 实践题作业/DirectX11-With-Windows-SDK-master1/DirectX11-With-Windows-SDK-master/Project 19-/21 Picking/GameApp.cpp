@@ -91,30 +91,36 @@ void GameApp::UpdateScene(float dt)
 
     bool hitObject = false;
     std::string pickedObjStr = "None";
+    int recognition = 1;//规定识别物体
     if (ray.Hit(m_BoundingSphere))
     {
         pickedObjStr = "Sphere";
         hitObject = true;
+        recognition = 1;
     }
     else if (ray.Hit(m_Cube.GetBoundingOrientedBox()))
     {
         pickedObjStr = "Cube";
         hitObject = true;
+        recognition = 2;
     }
     else if (ray.Hit(m_Cylinder.GetBoundingOrientedBox()))
     {
         pickedObjStr = "Cylinder";
         hitObject = true;
+        recognition = 3;
     }
     else if (ray.Hit(m_House.GetBoundingOrientedBox()))
     {
         pickedObjStr = "House";
         hitObject = true;
+        recognition = 4;
     }
     else if (ray.Hit(V[0], V[1], V[2]))
     {
         pickedObjStr = "Triangle";
         hitObject = true;
+        recognition = 5;
     }
 
     if (hitObject == true && ImGui::IsMouseClicked(ImGuiMouseButton_Left))
@@ -124,13 +130,81 @@ void GameApp::UpdateScene(float dt)
         MessageBox(nullptr, wstr.c_str(), L"Message", 0);
     }
 
+    static Model* currentlyPickedModel = nullptr; // 记录当前拾取的模型
+    static bool isLeftMouseDown = false;
+    static float leftMouseDownTime = 0.0f;
+
+    // 左键长按进行破坏操作
+    if (ImGui::IsMouseDown(ImGuiMouseButton_Left))
+    {
+        if (!isLeftMouseDown)
+        {
+            isLeftMouseDown = true;
+            leftMouseDownTime = 0.0f;
+        }
+        else
+        {
+            leftMouseDownTime += dt;
+            if (leftMouseDownTime >= 1.0f && hitObject)
+            {
+                switch (recognition)
+                {
+                case 1:
+                    // 移除球体逻辑，例如将其移出视野
+                    m_Sphere.GetTransform().SetPosition(1000.0f, 1000.0f, 1000.0f);
+                    break;
+                case 2:
+                    m_Cube.GetTransform().SetPosition(1000.0f, 1000.0f, 1000.0f);
+                    break;
+                case 3:
+                    m_Cylinder.GetTransform().SetPosition(1000.0f, 1000.0f, 1000.0f);
+                    break;
+                case 4:
+                    m_House.GetTransform().SetPosition(1000.0f, 1000.0f, 1000.0f);
+                    break;
+                case 5:
+                    m_Triangle.GetTransform().SetPosition(1000.0f, 1000.0f, 1000.0f);
+                    break;
+                }
+                currentlyPickedModel = nullptr; // 破坏后清空当前拾取的模型
+                isLeftMouseDown = false;
+                leftMouseDownTime = 0.0f;
+            }
+        }
+    }
+    else
+    {
+        isLeftMouseDown = false;
+        leftMouseDownTime = 0.0f;
+    }
+
+    // 右键点击将拾取的物品移动到点击位置
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Right) && currentlyPickedModel != nullptr)
+    {
+        XMVECTOR origin = XMLoadFloat3(&ray.GetOrigin());
+        XMVECTOR direction = XMLoadFloat3(&ray.GetDirection());
+        // 计算射线与 z = 0 平面的交点
+        float t = -XMVectorGetZ(origin) / XMVectorGetZ(direction);
+        XMVECTOR position = origin + t * direction;
+        XMFLOAT3 pos;
+        XMStoreFloat3(&pos, position);
+
+        // 设置拾取物品的新位置
+        currentlyPickedModel->GetTransform().SetPosition(pos.x, pos.y, pos.z);
+    }
+
+
     if (ImGui::Begin("Picking"))
     {
         ImGui::Text("Current Object: %s", pickedObjStr.c_str());
     }
     ImGui::End();
     ImGui::Render();
+
+
+
 }
+
 
 void GameApp::DrawScene()
 {
